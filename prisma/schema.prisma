@@ -1,0 +1,235 @@
+// myday2 — Prisma Schema
+// Production-ready data model for the AI Life Operating System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Authentication & User Identity ─────────────────────────────
+
+model User {
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String?   @unique
+  phone               String?   @unique
+  passwordHash        String?
+  image               String?
+  onboardingCompleted Boolean   @default(false)
+  preferences         Json?
+  onboardingData      Json?
+  aiProfile           Json?
+  timezone            String    @default("UTC")
+  subscriptionTier    String    @default("FREE") // FREE, PRO, TEAM
+  subscriptionExpiry  DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tasks               Task[]
+  habits              Habit[]
+  goals               Goal[]
+  aiPlans             AiPlan[]
+  insights            Insight[]
+  reminders           Reminder[]
+  notifications       Notification[]
+  sessions            Session[]
+  accounts            Account[]
+  analyticsEvents     AnalyticsEvent[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Core Domain Models ─────────────────────────────────────────
+
+model Task {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  description   String?
+  priority      String    @default("MEDIUM")
+  status        String    @default("TODO")
+  dueDate       DateTime?
+  estimatedTime Int?
+  category      String?
+  recurrence    String?
+  order         Int       @default(0)
+
+  goalId        String?
+  goal          Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+}
+
+model Habit {
+  id                String    @id @default(cuid())
+  userId            String
+  title             String
+  description       String?
+  frequency         String    @default("DAILY")
+  streak            Int       @default(0)
+  bestStreak        Int       @default(0)
+  completionHistory Json?
+  reminderTime      String?
+  category          String?
+  isActive          Boolean   @default(true)
+
+  goalId            String?
+  goal              Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId, isActive])
+}
+
+model Goal {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  description   String?
+  type          String
+  longTerm      Boolean   @default(true)
+  milestones    Json?
+  progress      Int       @default(0)
+  targetDate    DateTime?
+  status        String    @default("ACTIVE")
+
+  tasks         Task[]
+  habits        Habit[]
+  aiPlans       AiPlan[]
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId, status])
+}
+
+model AiPlan {
+  id            String    @id @default(cuid())
+  userId        String
+  type          String
+  generatedPlan Json
+  metadata      Json?
+
+  goalId        String?
+  goal          Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId, type])
+}
+
+model Insight {
+  id                String    @id @default(cuid())
+  userId            String
+  type              String
+  productivityScore Int
+  consistencyScore  Int
+  burnoutRisk       Int       @default(0)
+  burnoutSignals    Json?
+  recommendations   Json?
+  summary           String?
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+
+  @@index([userId, type])
+}
+
+model Reminder {
+  id               String    @id @default(cuid())
+  userId           String
+  title            String
+  triggerTime      DateTime
+  notificationType String
+  linkedItemType   String?
+  linkedItemId     String?
+  isSent           Boolean   @default(false)
+  isRecurring      Boolean   @default(false)
+  recurrenceRule   String?
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+
+  @@index([userId, isSent])
+  @@index([triggerTime, isSent])
+}
+
+// ─── Notifications ──────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  body      String?
+  type      String    // REMINDER, AI_INSIGHT, ACHIEVEMENT, SYSTEM
+  isRead    Boolean   @default(false)
+  actionUrl String?
+  metadata  Json?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@index([userId, isRead])
+}
+
+// ─── Analytics ──────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  event     String   // PAGE_VIEW, TASK_COMPLETED, HABIT_DONE, AI_USED, etc.
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, event])
+  @@index([createdAt])
+}

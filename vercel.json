@@ -1,0 +1,13 @@
+{
+  "$schema": "https://vercel.com/schemas/project.json",
+  "buildCommand": "npx prisma generate && next build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/cron/process-reminders",
+      "schedule": "* * * * *"
+    }
+  ]
+}
