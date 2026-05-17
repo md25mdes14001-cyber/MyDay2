@@ -7,7 +7,7 @@ services:
       - ..:/workspace:cached
     command: sleep infinity
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/myday2?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@localhost:5432/myday2?schema=public
       - NEXTAUTH_SECRET=myday2_secret_key_12345
       - NEXTAUTH_URL=https://${CODESPACE_NAME}-3000.app.github.dev
       - AUTH_SECRET=myday2_secret_key_12345

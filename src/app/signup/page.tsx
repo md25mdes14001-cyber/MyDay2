@@ -105,7 +105,7 @@ export default function SignupPage() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Your name"
                 required
-                className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400"
+                className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400"
               />
             </div>
 
@@ -139,7 +139,7 @@ export default function SignupPage() {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="you@example.com"
                   required={!usePhone}
-                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400"
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400"
                 />
               </div>
             ) : (
@@ -154,7 +154,7 @@ export default function SignupPage() {
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="+91 98765 43210"
                   required={usePhone}
-                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400"
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400"
                 />
               </div>
             )}
@@ -171,7 +171,7 @@ export default function SignupPage() {
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="Choose a strong password"
                   required
-                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400 pr-10"
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-300 transition-all placeholder:text-zinc-400 pr-10"
                 />
                 <button
                   type="button"
