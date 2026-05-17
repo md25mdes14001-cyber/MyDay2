@@ -1,8 +1,6 @@
 {
   "name": "MyDay2 Cloud Workspace",
-  "dockerComposeFile": "docker-compose.yml",
-  "service": "app",
-  "workspaceFolder": "/workspace",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
@@ -12,13 +10,12 @@
     "vscode": {
       "extensions": [
         "Prisma.prisma",
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint"
+        "esbenp.prettier-vscode"
       ]
     }
   },
-  "postCreateCommand": "npm install && npx prisma generate && npx prisma db push",
-  "forwardPorts": [3000, 5432],
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
       "label": "MyDay2 App",
