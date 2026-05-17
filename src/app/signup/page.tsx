@@ -46,18 +46,27 @@ export default function SignupPage() {
       }
 
       // Auto-login after successful registration
-      const signInResult = await signIn("credentials", {
-        identifier: usePhone ? form.phone : form.email,
-        password: form.password,
-        redirect: false,
-      });
+      try {
+        const signInResult = await signIn("credentials", {
+          identifier: usePhone ? form.phone : form.email,
+          password: form.password,
+          redirect: false,
+        });
 
-      if (signInResult?.ok) {
-        router.push("/onboarding");
-        router.refresh();
+        if (signInResult?.ok) {
+          router.push("/onboarding");
+          router.refresh();
+        } else {
+          // Registration succeeded but auto-login failed — send to login page
+          router.push("/login");
+        }
+      } catch {
+        // Registration succeeded but sign-in had an error — send to login page
+        router.push("/login");
       }
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Could not connect to the server. Please check that the database is running.");
     } finally {
       setLoading(false);
     }

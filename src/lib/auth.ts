@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { NextAuthConfig } from "next-auth";
@@ -15,7 +15,7 @@ export const authConfig: NextAuthConfig = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
-    CredentialsProvider({
+    Credentials({
       id: "credentials",
       name: "Credentials",
       credentials: {
@@ -23,38 +23,43 @@ export const authConfig: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.identifier || !credentials?.password) {
+        try {
+          if (!credentials?.identifier || !credentials?.password) {
+            return null;
+          }
+
+          const identifier = credentials.identifier as string;
+          const password = credentials.password as string;
+
+          // Find user by email or phone
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: identifier.toLowerCase() },
+                { phone: identifier },
+              ],
+            },
+          });
+
+          if (!user || !user.passwordHash) {
+            return null;
+          }
+
+          const isValid = await bcrypt.compare(password, user.passwordHash);
+          if (!isValid) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+          };
+        } catch (error) {
+          console.error("Auth authorize error:", error);
           return null;
         }
-
-        const identifier = credentials.identifier as string;
-        const password = credentials.password as string;
-
-        // Find user by email or phone
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { email: identifier.toLowerCase() },
-              { phone: identifier },
-            ],
-          },
-        });
-
-        if (!user || !user.passwordHash) {
-          return null;
-        }
-
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
       },
     }),
   ],
@@ -63,17 +68,21 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id;
       }
-      // Attach onboarding status to the token for middleware checks
-      if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { onboardingCompleted: true, name: true, image: true },
-        });
-        if (dbUser) {
-          token.onboardingCompleted = dbUser.onboardingCompleted;
-          token.name = dbUser.name;
-          token.picture = dbUser.image;
+      // Safely attach onboarding status — don't crash if DB is down
+      try {
+        if (token.id) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { onboardingCompleted: true, name: true, image: true },
+          });
+          if (dbUser) {
+            token.onboardingCompleted = dbUser.onboardingCompleted;
+            token.name = dbUser.name;
+            token.picture = dbUser.image;
+          }
         }
+      } catch (error) {
+        console.error("JWT callback DB lookup failed:", error);
       }
       return token;
     },
