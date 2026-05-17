@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   compress: true,
+  serverExternalPackages: ["@prisma/client", "bcryptjs"],
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
