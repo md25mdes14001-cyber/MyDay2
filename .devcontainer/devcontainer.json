@@ -1,24 +1,11 @@
 {
-  "name": "MyDay2 Cloud Workspace",
+  "name": "MyDay2",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
-    }
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "Prisma.prisma",
-        "esbenp.prettier-vscode"
-      ]
-    }
-  },
-  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postCreateCommand": "npm install",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
-      "label": "MyDay2 App",
+      "label": "MyDay2",
       "onAutoForward": "notify"
     }
   }
