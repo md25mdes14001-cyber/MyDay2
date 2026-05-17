@@ -31,6 +31,33 @@ export const authConfig: NextAuthConfig = {
           const identifier = credentials.identifier as string;
           const password = credentials.password as string;
 
+          // --- GUEST LOGIN LOGIC ---
+          if (identifier === "guest") {
+            let guestUser = await prisma.user.findUnique({
+              where: { email: "guest@myday2.com" },
+            });
+
+            if (!guestUser) {
+              const passwordHash = await bcrypt.hash("guestpassword123", 10);
+              guestUser = await prisma.user.create({
+                data: {
+                  name: "Guest User",
+                  email: "guest@myday2.com",
+                  passwordHash,
+                  onboardingCompleted: true,
+                },
+              });
+            }
+
+            return {
+              id: guestUser.id,
+              name: guestUser.name,
+              email: guestUser.email,
+              image: guestUser.image,
+            };
+          }
+          // -------------------------
+
           // Find user by email or phone
           const user = await prisma.user.findFirst({
             where: {

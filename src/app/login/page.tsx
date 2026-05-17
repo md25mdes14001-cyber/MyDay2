@@ -144,6 +144,19 @@ function LoginForm() {
                 </>
               )}
             </button>
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                const result = await signIn("credentials", { identifier: "guest", password: "guestpassword123", redirect: false });
+                if (!result?.error) { router.push(callbackUrl); router.refresh(); }
+                else { setError("Guest login failed"); setLoading(false); }
+              }}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-zinc-100 text-zinc-900 border border-zinc-200 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            >
+              Continue as Guest
+            </button>
           </form>
 
           <div className="mt-6 text-center text-sm text-zinc-500">
