@@ -26,6 +26,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('daily');
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [authBusy, setAuthBusy] = useState<'google' | 'guest' | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -56,15 +57,8 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   const handleSignIn = async () => {
+    setAuthBusy('google');
     try {
       await signInWithGoogle();
     } catch (error: any) {
@@ -72,49 +66,75 @@ export default function App() {
         toast.info("Sign-in cancelled. Please try again if you'd like to log in.");
       } else if (error.code === 'auth/popup-blocked') {
         toast.error('Sign-in popup blocked. Please allow popups for this site or try again.');
+      } else if (error?.message?.includes('network')) {
+        toast.error('No internet connection. Check your connection and try again.');
       } else {
         toast.error('Google Sign-In is not fully set up yet on this device. Use "Continue as Guest" for now, or see SETUP.md.');
         console.error('Sign-in error:', error);
       }
+    } finally {
+      setAuthBusy(null);
     }
   };
 
   const handleGuest = async () => {
+    setAuthBusy('guest');
     try {
       await continueAsGuest();
     } catch (error: any) {
-      toast.error('Could not start guest mode. Please try again.');
+      if (error?.message?.includes('network') || error?.code === 'auth/network-request-failed') {
+        toast.error('No internet connection. Check your connection and try again.');
+      } else {
+        toast.error('Could not start guest mode. Please try again.');
+      }
       console.error('Guest sign-in error:', error);
+    } finally {
+      setAuthBusy(null);
     }
   };
 
+  if (loading) {
+    return (
+      <>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FBFBFA] p-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-[400px]">
-          <Card className="border border-border shadow-sm bg-white rounded-xl overflow-hidden">
-            <CardHeader className="text-center pt-10 pb-6">
-              <div className="mx-auto bg-black w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-                <span className="text-xl font-bold text-white">m2</span>
-              </div>
-              <CardTitle className="text-[24px] font-bold tracking-tight text-foreground">myday2</CardTitle>
-              <CardDescription className="text-[14px] text-muted-foreground mt-1">continuity starts here.</CardDescription>
-            </CardHeader>
-            <CardContent className="px-8 pb-10">
-              <Button onClick={handleSignIn} className="w-full h-10 text-[14px] font-medium gap-2 bg-black text-white hover:bg-black/90">
-                <LogIn className="h-4 w-4" />
-                Sign in with Google
-              </Button>
-              <Button onClick={handleGuest} variant="outline" className="w-full h-10 text-[14px] font-medium mt-2.5">
-                Continue as Guest
-              </Button>
-              <p className="text-[11px] text-center mt-8 text-muted-foreground leading-relaxed">
-                By continuing, you agree to our Terms of Service and Privacy Policy.
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+      <>
+        <div className="flex items-center justify-center min-h-screen bg-[#FBFBFA] p-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-[400px]">
+            <Card className="border border-border shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="text-center pt-10 pb-6">
+                <div className="mx-auto bg-black w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+                  <span className="text-xl font-bold text-white">m2</span>
+                </div>
+                <CardTitle className="text-[24px] font-bold tracking-tight text-foreground">myday2</CardTitle>
+                <CardDescription className="text-[14px] text-muted-foreground mt-1">continuity starts here.</CardDescription>
+              </CardHeader>
+              <CardContent className="px-8 pb-10">
+                <Button onClick={handleSignIn} disabled={authBusy !== null} className="w-full h-10 text-[14px] font-medium gap-2 bg-black text-white hover:bg-black/90">
+                  {authBusy === 'google' ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                  Sign in with Google
+                </Button>
+                <Button onClick={handleGuest} disabled={authBusy !== null} variant="outline" className="w-full h-10 text-[14px] font-medium mt-2.5">
+                  {authBusy === 'guest' ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                  Continue as Guest
+                </Button>
+                <p className="text-[11px] text-center mt-8 text-muted-foreground leading-relaxed">
+                  By continuing, you agree to our Terms of Service and Privacy Policy.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+        <Toaster position="top-center" />
+      </>
     );
   }
 
