@@ -51,3 +51,22 @@ jobs:
         with:
           name: myday2-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Rename APKs for the release
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk myday2-debug.apk
+          cp android/app/build/outputs/apk/release/app-release.apk myday2-release.apk
+
+      - name: Publish APKs to a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: Latest build
+          body: Automatically built from the latest push to main.
+          prerelease: true
+          make_latest: true
+          files: |
+            myday2-debug.apk
+            myday2-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
